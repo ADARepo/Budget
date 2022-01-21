@@ -1,0 +1,11 @@
+income 50.0
+internet 20.0
+utilities 1500
+disney 30
+grocery 300
+spotify 12
+gas 130
+sunpass 115
+paramount 7
+razors 7
+internet 50
