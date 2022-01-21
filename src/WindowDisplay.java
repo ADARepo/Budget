@@ -1,16 +1,16 @@
-package MoneyTracker;
-
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
-public class Budget
+public class WindowDisplay
 {
-    // used to hold info grabbed from file and info put back into it.
-    private static File info;
-    private static String fileName;
 
     private static JFrame frame;
 
@@ -43,10 +43,10 @@ public class Budget
     private static JButton editExpenses;
 
     // creates JFrame and calls other methods for creating the frame UI.
-    public static void createUIComponents()
+    public static void initWindow()
     {
         frame = new JFrame("Budget");
-        frame.setPreferredSize(new Dimension(280, 300));
+        frame.setPreferredSize(new Dimension(280, 200));
         frame.setLayout(new GridLayout(ROWS, COLS));
 
         // methods for frame UI creation.
@@ -91,7 +91,28 @@ public class Budget
                 showIncome.setText(("$ " + income));
         });
 
+        editExpenses.addActionListener(e -> {
+            showExpenseWindow();
+        });
+    }
 
+    public static void showExpenseWindow()
+    {
+        JFrame expenseFrame = new JFrame();
+
+        JDialog expenseDialog = new JDialog(expenseFrame, "Edit Expenses", true);
+
+        int numExpenses = (linkedItemList.size() - 2) / 2;
+
+        expenseDialog.setLayout(new GridLayout(numExpenses, 2));
+
+
+        expenseDialog.setModal(true);
+        expenseDialog.setAlwaysOnTop(true);
+        expenseDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+
+        expenseDialog.setLocationRelativeTo(null);
+        expenseDialog.setVisible(true);
     }
 
     public static void panelCreate()
@@ -206,7 +227,7 @@ public class Budget
 
         try
         {
-            FileWriter writer = new FileWriter(info, false);
+            FileWriter writer = new FileWriter(FileHandle.file, false);
             writer.write(newFileInput);
             writer.close();
         }catch (IOException e)
@@ -220,8 +241,8 @@ public class Budget
     {
         try
         {
-            info = new File(fileName);
-            Scanner reader = new Scanner(info);
+            FileHandle.grabFile();
+            Scanner reader = new Scanner(FileHandle.file);
 
             fileText = "";
 
@@ -231,15 +252,7 @@ public class Budget
         }
         catch (FileNotFoundException e)
         {
-            System.err.println("Error occurred.");
-            e.printStackTrace();
+            FileHandle.newFile();
         }
-    }
-
-    public static void main(String [] args)
-    {
-        //System.out.println(fileText);
-        fileName = "C:\\Users\\austi\\Desktop\\LaurenBudget\\src\\MoneyTracker\\expenses.txt";
-        createUIComponents();
     }
 }
