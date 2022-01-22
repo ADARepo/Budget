@@ -97,33 +97,47 @@ public class WindowDisplay
     {
         // create a new frame and display labels in accordance with the number of expenses in linkedItemList.
         JFrame showExpenses = new JFrame("Edit Expenses");
-        showExpenses.setPreferredSize(new Dimension(300, 300));
-        int numRows = (linkedItemList.size()) / 2;
-        showExpenses.setLayout(new GridLayout(numRows + 1, COLS));
+        showExpenses.setPreferredSize(new Dimension(300, 350));
 
-        // populate the grid with panels that will hold labels and text areas.
+        // numRows calculated using # items in linkedItemList excluding income.
+        int numRows = (linkedItemList.size() - 2) / 2;
+
+        // main panel holding the 2d array of panels so we can include a scrollbar.
+        JPanel mainExpPanel = new JPanel();
+        mainExpPanel.setLayout(new GridLayout(numRows + 1, COLS));
+
+        // populate the mainExpPanel with panels that will hold labels and text areas.
         JPanel [][] expensePanels = new JPanel[numRows + 1][COLS];
-        JLabel expenseLabel;
-        JTextArea expenseValDisplay;
 
-        // adding panels to showExpenses frame.
-        for (int i = 0; i < numRows; i++)
+        for (int i = 0; i < numRows + 1; i++)
         {
             for (int j = 0; j < COLS; j++)
             {
+                // adding each expensePanel to mainExpPanel in correct position.
                 expensePanels[i][j] = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                showExpenses.add(expensePanels[i][j]);
+                mainExpPanel.add(expensePanels[i][j]);
             }
         }
 
         // adding labels to panels and expense values to text areas to edit.
-        int listIter = 0;
+        int listIter = 2;
         for (int i = 0; i < numRows; i++)
         {
             int colInd = 0;
             expensePanels[i][colInd++].add(new JLabel(linkedItemList.get(listIter++)));
             expensePanels[i][colInd].add(new JTextArea(linkedItemList.get(listIter++)));
         }
+
+        // creating an OK and Cancel button to save changes to income.
+        JButton okButton = new JButton("OK");
+        JButton cancelButton = new JButton("Cancel");
+
+        // adding the OK and Cancel button to last row of expensePanels.
+        expensePanels[numRows][0].add(okButton);
+        expensePanels[numRows][1].add(cancelButton);
+
+        // finally adding the main panel to frame with scroll bar.
+        showExpenses.add(new JScrollPane(mainExpPanel));
 
         showExpenses.setLocationRelativeTo(null);
         showExpenses.pack();
