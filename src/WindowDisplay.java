@@ -1,9 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +8,6 @@ import java.util.Scanner;
 
 public class WindowDisplay
 {
-
     private static JFrame frame;
 
     // file info in a single string, linked list for item management, doubles for holding displayed text.
@@ -38,7 +34,7 @@ public class WindowDisplay
     private static JTextArea showExpenses;
     private static JTextArea showGross;
 
-    // edit income edits income inside of .txt and displays new income. edit expenses for editing expense info.
+    // edits income inside the .txt and displays new income. edit expenses for editing expense info.
     private static JButton editIncome;
     private static JButton editExpenses;
 
@@ -67,7 +63,7 @@ public class WindowDisplay
     }
 
     // handles the making of buttons.
-    public static void buttonCreate() {
+    private static void buttonCreate() {
         editIncome = new JButton("Edit Income");
         editExpenses = new JButton("Edit Expenses");
 
@@ -91,31 +87,51 @@ public class WindowDisplay
                 showIncome.setText(("$ " + income));
         });
 
+        // when edit expenses button is clicked.
         editExpenses.addActionListener(e -> {
-            showExpenseWindow();
+            expenseDialog();
         });
     }
 
-    public static void showExpenseWindow()
+    private static void expenseDialog()
     {
-        JFrame expenseFrame = new JFrame();
+        // create a new frame and display labels in accordance with the number of expenses in linkedItemList.
+        JFrame showExpenses = new JFrame("Edit Expenses");
+        showExpenses.setPreferredSize(new Dimension(300, 300));
+        int numRows = (linkedItemList.size()) / 2;
+        showExpenses.setLayout(new GridLayout(numRows + 1, COLS));
 
-        JDialog expenseDialog = new JDialog(expenseFrame, "Edit Expenses", true);
+        // populate the grid with panels that will hold labels and text areas.
+        JPanel [][] expensePanels = new JPanel[numRows + 1][COLS];
+        JLabel expenseLabel;
+        JTextArea expenseValDisplay;
 
-        int numExpenses = (linkedItemList.size() - 2) / 2;
+        // adding panels to showExpenses frame.
+        for (int i = 0; i < numRows; i++)
+        {
+            for (int j = 0; j < COLS; j++)
+            {
+                expensePanels[i][j] = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                showExpenses.add(expensePanels[i][j]);
+            }
+        }
 
-        expenseDialog.setLayout(new GridLayout(numExpenses, 2));
+        // adding labels to panels and expense values to text areas to edit.
+        int listIter = 0;
+        for (int i = 0; i < numRows; i++)
+        {
+            int colInd = 0;
+            expensePanels[i][colInd++].add(new JLabel(linkedItemList.get(listIter++)));
+            expensePanels[i][colInd].add(new JTextArea(linkedItemList.get(listIter++)));
+        }
 
-
-        expenseDialog.setModal(true);
-        expenseDialog.setAlwaysOnTop(true);
-        expenseDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-
-        expenseDialog.setLocationRelativeTo(null);
-        expenseDialog.setVisible(true);
+        showExpenses.setLocationRelativeTo(null);
+        showExpenses.pack();
+        showExpenses.setResizable(false);
+        showExpenses.setVisible(true);
     }
 
-    public static void panelCreate()
+    private static void panelCreate()
     {
         displayHolder = new JPanel[ROWS][COLS];
 
@@ -129,14 +145,14 @@ public class WindowDisplay
         }
     }
 
-    public static void labelCreate()
+    private static void labelCreate()
     {
         incomeText = new JLabel("Monthly Gross Income");
         expensesText = new JLabel("Monthly Expenses");
         grossText = new JLabel("Net Income (monthly)");
     }
 
-    public static void textBoxCreate()
+    private static void textBoxCreate()
     {
         showIncome = new JTextArea();
         showExpenses = new JTextArea();
@@ -150,7 +166,7 @@ public class WindowDisplay
         showGross.setEditable(false);
     }
 
-    public static void setTextFields()
+    private static void setTextFields()
     {
         grabText();
         String [] splitComponents = fileText.split("\\s+");
@@ -194,7 +210,7 @@ public class WindowDisplay
         showGross.setText("$ " + grossSum);
     }
 
-    public static void addComponents()
+    private static void addComponents()
     {
         displayHolder[0][0].add(incomeText);
         displayHolder[0][1].add(showIncome);
@@ -206,7 +222,7 @@ public class WindowDisplay
         displayHolder[3][1].add(editExpenses);
     }
 
-    public static void updateIncome()
+    private static void updateIncome()
     {
         linkedItemList.remove(1);
         linkedItemList.add(1, Double.toString(income));
@@ -237,7 +253,7 @@ public class WindowDisplay
 
     }
 
-    public static void grabText()
+    private static void grabText()
     {
         try
         {
