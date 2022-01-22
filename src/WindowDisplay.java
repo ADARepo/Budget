@@ -1,10 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.*;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
 
 public class WindowDisplay
 {
@@ -13,6 +14,7 @@ public class WindowDisplay
     // file info in a single string, linked list for item management, doubles for holding displayed text.
     private static String fileText;
     private static LinkedList<String> linkedItemList;
+    private static List<JTextArea> expenseVals;
     private static double income;
     private static double expenseSum;
     private static double grossSum;
@@ -37,12 +39,13 @@ public class WindowDisplay
     // edits income inside the .txt and displays new income. edit expenses for editing expense info.
     private static JButton editIncome;
     private static JButton editExpenses;
+    private static JButton addExpense;
 
     // creates JFrame and calls other methods for creating the frame UI.
     public static void initWindow()
     {
         frame = new JFrame("Budget");
-        frame.setPreferredSize(new Dimension(280, 200));
+        frame.setPreferredSize(new Dimension(580, 290));
         frame.setLayout(new GridLayout(ROWS, COLS));
 
         // methods for frame UI creation.
@@ -66,6 +69,7 @@ public class WindowDisplay
     private static void buttonCreate() {
         editIncome = new JButton("Edit Income");
         editExpenses = new JButton("Edit Expenses");
+        addExpense = new JButton("Add Expense");
 
         // if edit income button is clicked...
         editIncome.addActionListener(e -> {
@@ -108,6 +112,7 @@ public class WindowDisplay
 
         // populate the mainExpPanel with panels that will hold labels and text areas.
         JPanel [][] expensePanels = new JPanel[numRows + 1][COLS];
+        expenseVals = new ArrayList<JTextArea>();
 
         for (int i = 0; i < numRows + 1; i++)
         {
@@ -120,17 +125,61 @@ public class WindowDisplay
         }
 
         // adding labels to panels and expense values to text areas to edit.
+        // textarea will need to only accept numbers.
         int listIter = 2;
         for (int i = 0; i < numRows; i++)
         {
             int colInd = 0;
-            expensePanels[i][colInd++].add(new JLabel(linkedItemList.get(listIter++)));
-            expensePanels[i][colInd].add(new JTextArea(linkedItemList.get(listIter++)));
+
+            JLabel tempLabel = new JLabel(linkedItemList.get(listIter++));
+            tempLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+            expensePanels[i][colInd++].add(tempLabel);
+
+            JTextArea tempTArea = new JTextArea(linkedItemList.get(listIter++));
+            tempTArea.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent ke) {
+                    String value = tempTArea.getText();
+                    // numbers and backspace only.
+                    if ((ke.getKeyChar() >= '0' && ke.getKeyChar() <= '9') || ke.getKeyChar() == 8)
+                        tempTArea.setEditable(true);
+                    else
+                        tempTArea.setEditable(false);
+                }
+            });
+            tempTArea.setFont(new Font("Serif", Font.BOLD, 18));
+            expenseVals.add(tempTArea);
+            expensePanels[i][colInd].add(tempTArea);
         }
 
         // creating an OK and Cancel button to save changes to income.
         JButton okButton = new JButton("OK");
         JButton cancelButton = new JButton("Cancel");
+
+        // adding action listener for OK button.
+        okButton.addActionListener(e -> {
+            // going through all items in text areas and inputting new values into linkedItemList.
+            int itemListIter = 3;
+            for (int i = 0; i < expenseVals.size(); i++)
+            {
+                String insertThis = expenseVals.get(i).getText();
+                linkedItemList.set(itemListIter, insertThis);
+
+                if ((itemListIter + 2) < linkedItemList.size())
+                    itemListIter += 2;
+            }
+
+            // updating text inside the .txt file then resetting text fields on main frame.
+            updateFileInfo();
+            setTextFields();
+
+            // closing the window after all the data is updated in the txt file.
+            showExpenses.dispatchEvent(new WindowEvent(showExpenses, WindowEvent.WINDOW_CLOSING));
+        });
+
+        // simply closing the window.
+        cancelButton.addActionListener(e -> {
+            showExpenses.dispatchEvent(new WindowEvent(showExpenses, WindowEvent.WINDOW_CLOSING));
+        });
 
         // adding the OK and Cancel button to last row of expensePanels.
         expensePanels[numRows][0].add(okButton);
@@ -162,15 +211,22 @@ public class WindowDisplay
     private static void labelCreate()
     {
         incomeText = new JLabel("Monthly Gross Income");
+        incomeText.setFont(new Font("Serif", Font.PLAIN, 20));
         expensesText = new JLabel("Monthly Expenses");
+        expensesText.setFont(new Font("Serif", Font.PLAIN, 20));
         grossText = new JLabel("Net Income (monthly)");
+        grossText.setFont(new Font("Serif", Font.PLAIN, 20));
+
     }
 
     private static void textBoxCreate()
     {
         showIncome = new JTextArea();
+        showIncome.setFont(new Font("Serif", Font.BOLD, 18));
         showExpenses = new JTextArea();
+        showExpenses.setFont(new Font("Serif", Font.BOLD, 18));
         showGross = new JTextArea();
+        showGross.setFont(new Font("Serif", Font.BOLD, 18));
 
         // grabbing income number from .txt file imported at beginning.
         setTextFields();
@@ -233,6 +289,7 @@ public class WindowDisplay
         displayHolder[2][0].add(grossText);
         displayHolder[2][1].add(showGross);
         displayHolder[3][0].add(editIncome);
+        displayHolder[3][1].add(addExpense);
         displayHolder[3][1].add(editExpenses);
     }
 
@@ -240,6 +297,32 @@ public class WindowDisplay
     {
         linkedItemList.remove(1);
         linkedItemList.add(1, Double.toString(income));
+        updateFileInfo();
+    }
+
+    private static void grabText()
+    {
+        try
+        {
+            FileHandle.grabFile();
+            Scanner reader = new Scanner(FileHandle.file);
+
+            fileText = "";
+
+            while (reader.hasNextLine())
+                fileText += reader.nextLine().toLowerCase()+ " ";
+
+        }
+        catch (FileNotFoundException e)
+        {
+            FileHandle.newFile();
+        }
+    }
+
+    private static void updateFileInfo()
+    {
+        // linkedItemList should have updated info so insert it into file without editing income.
+        // convert into a string array then do a 1 to 1 swap with the values inside the .txt.
         String [] splitComponents = linkedItemList.toArray(new String[0]);
         String newFileInput = "";
         int newLine = 0;
@@ -263,26 +346,6 @@ public class WindowDisplay
         }catch (IOException e)
         {
             e.printStackTrace();
-        }
-
-    }
-
-    private static void grabText()
-    {
-        try
-        {
-            FileHandle.grabFile();
-            Scanner reader = new Scanner(FileHandle.file);
-
-            fileText = "";
-
-            while (reader.hasNextLine())
-                fileText += reader.nextLine().toLowerCase()+ " ";
-
-        }
-        catch (FileNotFoundException e)
-        {
-            FileHandle.newFile();
         }
     }
 }

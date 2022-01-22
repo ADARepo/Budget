@@ -1,4 +1,4 @@
-income 703.0
+income 900.0
 internet 20.0
 utilities 1500
 disney 30
