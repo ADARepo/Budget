@@ -95,6 +95,59 @@ public class WindowDisplay
         editExpenses.addActionListener(e -> {
             expenseDialog();
         });
+
+        // when add expenses button is clicked.
+        addExpense.addActionListener(e -> {
+            receiveNewExpense();
+        });
+    }
+
+    private static void receiveNewExpense()
+    {
+        // panel to hold two input fields, one for expense name and one for its value.a
+        JPanel expInput = new JPanel();
+        expInput.setLayout(new GridLayout(2, 2, 10, 10));
+
+        // labels to be clear on what the input should be.
+        JLabel askExpenseName = new JLabel("Enter expense name: ");
+        JLabel askExpenseVal = new JLabel("Enter expense cost: ");
+
+        // text areas for input.
+        JTextArea expenseName = new JTextArea();
+        expenseName.setFont(new Font("Serif", Font.BOLD, 15));
+
+        JTextArea expenseVal = new JTextArea();
+        expenseVal.setFont(new Font("Serif", Font.BOLD, 15));
+        expenseVal.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent ke) {
+                String value = expenseVal.getText();
+                // numbers and backspace only.
+                if ((ke.getKeyChar() >= '0' && ke.getKeyChar() <= '9') || ke.getKeyChar() == 8)
+                    expenseVal.setEditable(true);
+                else
+                    expenseVal.setEditable(false);
+            }
+        });
+
+        // placing the text areas and labels in correct locations.
+        expInput.add(askExpenseName);
+        expInput.add(expenseName);
+        expInput.add(askExpenseVal);
+        expInput.add(expenseVal);
+
+        int val = JOptionPane.showConfirmDialog(null, expInput,
+                "Enter new expense", JOptionPane.OK_CANCEL_OPTION);
+
+        if (val == JOptionPane.OK_OPTION)
+        {
+            if (expenseName.getText() != null && expenseVal.getText() != null)
+            {
+                linkedItemList.add(expenseName.getText());
+                linkedItemList.add(expenseVal.getText());
+                updateFileInfo();
+                setTextFields();
+            }
+        }
     }
 
     private static void expenseDialog()
